@@ -1,16 +1,34 @@
-# You can create copy of this file and load the required file on the rosparam server accordingly. Do not forget to modify the file name in the launch file.
+# Individual marker configuration for natnet_ros2.
+#
+# This file defines the names and initial positions of unlabeled markers
+# for nearest-neighbour tracking. It is loaded when pub_individual_marker:=true.
+#
+# Usage:
+#   ros2 launch natnet_ros2 natnet_ros2.launch.py \
+#     serverIP:=<IP> clientIP:=<IP> \
+#     pub_individual_marker:=true conf_file:=initiate.yaml
+#
+# To find initial marker positions, launch with log_frames:=true and read
+# the X/Y/Z coordinates from the terminal output.
+#
+# Format:
+#   - List all marker names under object_names.
+#   - For each name, provide marker_config (0), orientation [rx,ry,rz],
+#     and position [x, y, z] in meters.
+#   - Do not leave orientation or position empty.
+#   - You can copy this file and rename it; pass the new name via conf_file.
+#
+# Note: node_name in the launch file must match the top-level key below
+# (default: natnet_ros2).
 
 natnet_ros2:
   ros__parameters:
-    # Add all the object names in this list to get the head count and the names of the objects
     object_names: ['m1']
 
-    # Initial position of the object must be within the tracking tolerance (in meters).
-    # marker_config and orientation is not used as of now. 
     m1:
       marker_config: 0
       pose:
-        orientation: [0,0,0] #Do not leave it empty
+        orientation: [0, 0, 0]
         position:
         - 0.
         - 0.
@@ -19,7 +37,7 @@ natnet_ros2:
 #    m2:
 #      marker_config: 0
 #      pose:
-#        orientation: [0,0,0]
+#        orientation: [0, 0, 0]
 #        position:
 #        - -0.6966362595558167
 #        - -1.822044014930725
