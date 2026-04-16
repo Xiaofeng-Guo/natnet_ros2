@@ -1,21 +1,21 @@
-# NatNet 4 ROS 2 driver (WIP)
+# NatNet 4 ROS 2 driver
 
-[![GitHub Action Status](https://github.com/L2S-lab/natnet_ros2/actions/workflows/AMD64-humble.yaml/badge.svg?event=push)](https://github.com/L2S-lab/natnet_ros2) 
-[![GitHub Action Status](https://github.com/L2S-lab/natnet_ros2/actions/workflows/AMD64-jazzy.yaml/badge.svg?event=push)](https://github.com/L2S-lab/natnet_ros2) 
-[![GitHub Action Status](https://github.com/L2S-lab/natnet_ros2/actions/workflows/ARM64-humble.yaml/badge.svg?event=push)](https://github.com/L2S-lab/natnet_ros2) 
-[![GitHub Action Status](https://github.com/L2S-lab/natnet_ros2/actions/workflows/ARM64-jazzy.yaml/badge.svg?event=push)](https://github.com/L2S-lab/natnet_ros2) 
+## Acknowledgment
 
+This package is adopted from and based on the [natnet_ros2](https://github.com/L2S-lab/natnet_ros2). The original work is licensed under the
+[GNU General Public License v3.0](https://www.gnu.org/licenses/gpl-3.0.html).
 
-[![Static Badge](https://img.shields.io/badge/hal.science/hal-04150950v2?logo=hal&logoColor=red&label=hal&labelColor=blue&color=red)](https://hal.science/hal-04150950)
+Original repository: https://github.com/L2S-lab/natnet_ros2
 
-It is a continuation of the ROS 1 driver. Which can be found [here](https://github.com/L2S-lab/natnet_ros_cpp).
-
-If you are using software for any publication or article, we would be delighted if you could cite it [from here](https://hal.science/hal-04150950). 
+Modifications in this fork include fixes to the command-line launch file
+(`natnet_ros2.launch.py`) for correct parameter type handling, lifecycle
+activation, and `libNatNet.so` installation.
 
 ## Introduction
-This package contains a ROS 2 driver for the NatNet protocol used by the OptiTrack motion capture system. It supports NatNet versions 4.0 (Motive 2.2 and higher). The NatNet SDK provided by the optitrack can be found [here](https://optitrack.com/support/downloads/developer-tools.html#natnet-sdk). It will be downloaded under `deps/NatnetSDK` while building it for the first time. NatNet protocol is used for streaming live motion capture data (rigid bodies, skeletons etc) across the shared network. 
 
-This package is only tested with the Natnet 4.0 and ROS 2 (Foxy and Humble) but probably will work with the other versions of Motive and ROS 2 as well. 
+This package contains a ROS 2 driver for the NatNet protocol used by the OptiTrack motion capture system. It supports NatNet versions 4.0 (Motive 2.2 and higher). The NatNet SDK provided by the optitrack can be found [here](https://optitrack.com/support/downloads/developer-tools.html#natnet-sdk). It will be downloaded under `deps/NatnetSDK` while building it for the first time. NatNet protocol is used for streaming live motion capture data (rigid bodies, skeletons etc) across the shared network.
+
+This package is only tested with the Natnet 4.0 and ROS 2 (Foxy and Humble) but probably will work with the other versions of Motive and ROS 2 as well.
 
 ### Current Features:
   
@@ -62,35 +62,97 @@ Here is an example of how your streaming settings should look.
 ![alt text](https://github.com/L2S-lab/natnet_ros2/blob/main/img/streaming.png)
 
 
-#### Easy way
+#### Option 1: Command-line launch (recommended)
 
-Using GUI tool
-Here, you can use simple tool and follow the instruction from the output area on the right bottom corner.
+Launch the node directly from the command line with all parameters specified as launch arguments.
+
+**Basic usage (rigid body tracking):**
+```bash
+source install/setup.bash
+ros2 launch natnet_ros2 natnet_ros2.launch.py serverIP:=<MOTIVE_PC_IP> clientIP:=<YOUR_PC_IP>
 ```
+
+**Example:**
+```bash
+ros2 launch natnet_ros2 natnet_ros2.launch.py serverIP:=192.168.123.40 clientIP:=192.168.123.90
+```
+
+By default this publishes rigid bodies and activates the node immediately.
+
+**With individual marker tracking:**
+```bash
+ros2 launch natnet_ros2 natnet_ros2.launch.py \
+  serverIP:=192.168.123.40 \
+  clientIP:=192.168.123.90 \
+  pub_individual_marker:=true \
+  conf_file:=initiate.yaml
+```
+
+**With unicast and custom ports:**
+```bash
+ros2 launch natnet_ros2 natnet_ros2.launch.py \
+  serverIP:=192.168.123.40 \
+  clientIP:=192.168.123.90 \
+  serverType:=unicast \
+  serverCommandPort:=1510 \
+  serverDataPort:=1511
+```
+
+**Full list of launch arguments:**
+
+| Argument | Default | Description |
+|----------|---------|-------------|
+| `serverIP` | `192.168.0.100` | IP address of the Motive host PC |
+| `clientIP` | `192.168.0.103` | IP address of this PC |
+| `serverType` | `multicast` | `multicast` or `unicast` |
+| `multicastAddress` | `239.255.42.99` | Multicast group address (only used when serverType is multicast) |
+| `serverCommandPort` | `1510` | NatNet command port |
+| `serverDataPort` | `1511` | NatNet data port |
+| `global_frame` | `world` | TF parent frame name |
+| `remove_latency` | `false` | Subtract system latency from timestamps |
+| `pub_rigid_body` | `true` | Publish rigid body poses |
+| `pub_rigid_body_marker` | `false` | Publish markers of rigid bodies |
+| `pub_individual_marker` | `false` | Publish unlabeled individual markers (requires conf_file) |
+| `pub_pointcloud` | `false` | Publish all markers as a PointCloud |
+| `log_internals` | `false` | Log internal NatNet details |
+| `log_frames` | `false` | Log incoming frame data to terminal |
+| `log_latencies` | `false` | Log latency information |
+| `conf_file` | `initiate.yaml` | YAML config for individual marker names and initial positions |
+| `node_name` | `natnet_ros2` | Name of the ROS 2 node |
+| `activate` | `true` | Automatically activate the lifecycle node |
+| `immt` | `PoseStamped` | Individual marker message type: `PoseStamped` or `PointStamped` |
+
+#### Option 2: GUI launch
+
+Use the GUI tool for interactive configuration. Follow the instructions in the output area.
+```bash
 ros2 launch natnet_ros2 gui_natnet_ros2.launch.py
 ```
 ![alt text](https://github.com/L2S-lab/natnet_ros2/blob/main/img/ui-1.png)
 
+**Note:** When using the GUI, you must fill in at least one marker name in the "Single marker naming" tab before starting the node.
 
-#### Difficult way
+#### Configuring individual markers
 
-Using Non gui approach
-`ros2 launch natnet_ros2 natnet_ros2.launch.py`
+To track unlabeled markers as named objects, edit `config/initiate.yaml` (or make a copy).
+Each marker needs a name, an initial position (for nearest-neighbour matching), and a marker_config entry.
 
-##### Understanding the launch file
-Launch file `natnet_ros2.launch.py` contains the several configurable arguments. The details are mentioned in the launch file. Following are several important argument for the connection and the data transfer. Other connection arguments are for the advanced option.
+See `config/initiate.yaml` for the format. Then launch with:
+```bash
+ros2 launch natnet_ros2 natnet_ros2.launch.py \
+  serverIP:=<IP> clientIP:=<IP> \
+  pub_individual_marker:=true \
+  conf_file:=your_config.yaml
+```
 
-- `serverIP` : The IP address of the host PC. (The one selected in the Local Interface in Motive app)
-- `clientIP` : The IP address of the PC on which the file will be launched
-- `serverType` : Two possible options, `multicast` and `unicast`
+To find initial marker positions, you can enable frame logging:
+```bash
+ros2 launch natnet_ros2 natnet_ros2.launch.py \
+  serverIP:=<IP> clientIP:=<IP> \
+  log_frames:=true
+```
 
-##### Publishing the single marker 
-It is possible to track the single marker as a rigid body with constant orientation. Go to the `config/initiate.yaml` It is suggested to make a copy of the file and rename the new file.
-The file contains the details on what to modify. 
+## License
 
-The question might arise on how to check the position of the single marker. For that, you can log the frames of the incoming data in the terminal. To do so, enable the `log_frames` in the launch file.
-
-After configuring the `initiate.yaml`, in the launch file, enable the `pub_individual_marker`. Change the name of the config file in the argument `conf_file` if needed and launch the file.
-
-<!-- ## Citation
-If you use this software, please consider citing it [from here](https://hal.science/hal-04150950) -->
+This project is licensed under the **GNU General Public License v3.0** - see the
+[LICENSE](LICENSE) file for details.
