@@ -82,6 +82,10 @@ rosidl_target_interfaces(
   ${PROJECT_NAME} "rosidl_typesupport_cpp")
 target_link_libraries(marker_poses_server ${NATNET_LIBRARY_DIR})
 
+install(FILES ${NATNET_LIBRARY_DIR}
+  DESTINATION lib
+)
+
 install(DIRECTORY include/${PROJECT_NAME}
   DESTINATION include
 )
